@@ -27,8 +27,11 @@ fn main() {
         ::std::process::exit(1);
     }
 
+    // select camera
+    let active_cam = info.cameras[0];
+
     // initiate the camera
-    let mut camera = rascam::SimpleCamera::new(info).unwrap();
+    let mut camera = rascam::SimpleCamera::new(active_cam).unwrap();
     camera.activate().unwrap();
 
 	loop {
