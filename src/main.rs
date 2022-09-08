@@ -13,10 +13,12 @@ fn main() {
 
 	// get current date
 	let date: chrono::Date<Local> = chrono::offset::Local::now().date();
+	
 	// the current date is the photo folder's name
 	let dir_name: String = format!("{}/{}", PATH, date.format("%d_%m_%y"));
+
 	// create the photo folder
-	fs::create_dir_all(dir_name).unwrap();
+	fs::create_dir_all(&dir_name).unwrap();
 
 	// get information about all installed cameras
     let info = rascam::info().unwrap();
@@ -39,15 +41,15 @@ fn main() {
 		let time: chrono::DateTime<Local> = chrono::offset::Local::now();
 
 		// the time is image's file name
-		let image_path = format!("{}/{}.{}", dir_name, time.format("%H_%M_%S"), FILE_FORMAT);
+		let image_path = format!("{}/{}.{}", &dir_name, time.format("%H_%M_%S"), FILE_FORMAT);
 
 		// take photo
 		let photo = camera.take_one().unwrap();
 
 		// create and save the image file
-    	fs::File::create(image_path).unwrap().write_all(&photo).unwrap();
+    	fs::File::create(&image_path).unwrap().write_all(&photo).unwrap();
 
-		println!("image '{}' saved", image_path);
+		println!("image '{}' saved", &image_path);
 
 		// wait a bit
 		thread::sleep(DELAY);
