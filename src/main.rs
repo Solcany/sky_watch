@@ -36,7 +36,7 @@ fn main() {
 		let time: chrono::DateTime<Local> = chrono::offset::Local::now();
 
 		// the time is image's file name
-		let image_path = format!("{}/{}.{}", PATH, time.format("%H_%M_%S"), FILE_FORMAT);
+		let image_path = format!("{}/{}.{}", dir_name, time.format("%H_%M_%S"), FILE_FORMAT);
 
 		// take photo
 		let photo = camera.take_one().unwrap();
