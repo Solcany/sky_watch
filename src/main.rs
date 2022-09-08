@@ -13,7 +13,7 @@ fn main() {
 
 	// get current date
 	let date: chrono::Date<Local> = chrono::offset::Local::now().date();
-	
+
 	// the current date is the photo folder's name
 	let dir_name: String = format!("{}/{}", PATH, date.format("%d_%m_%y"));
 
@@ -30,7 +30,7 @@ fn main() {
     }
 
     // select camera
-    let active_cam = info.cameras[0];
+    let active_cam = info.cameras[0].clone();
 
     // initiate the camera
     let mut camera = rascam::SimpleCamera::new(active_cam).unwrap();
