@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono;
 use std::thread;
 use std::time;
 use std::fs;
@@ -19,7 +19,7 @@ fn main() {
         println!("Found 0 cameras. Exiting");
         ::std::process::exit(1);
     }
-    
+
     // select camera
     let active_cam = info.cameras[0].clone();
 
