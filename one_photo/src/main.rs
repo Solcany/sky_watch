@@ -11,6 +11,12 @@ fn main() {
 	const PATH: &str = "images";	
 	const FILE_FORMAT: &str = "jpg";
 
+	// the current date is the photo folder's name
+	//let dir_name: String = format!("{}/{}", PATH, date.format("%d_%m_%y"));
+
+	// create the photo folder
+	fs::create_dir(PATH).unwrap();
+
 	// get information about all installed cameras
     let info = rascam::info().unwrap();
 
