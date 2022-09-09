@@ -21,7 +21,6 @@ fn main() {
         use_encoder: false,
     };
 
-
 	// get information about all installed cameras
     let info = rascam::info().unwrap();
 
