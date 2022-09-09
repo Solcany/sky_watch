@@ -3,7 +3,7 @@ use std::thread;
 use std::time;
 use std::fs;
 use rascam;
-use std::io::Write;
+use std::io;
 
 
 fn main() {
@@ -28,7 +28,7 @@ fn main() {
     camera.activate().unwrap();
 
 	// get current time
-	let time: chrono::DateTime<chrono::offset::Local> = chrono::offset::Local::now();
+	let time: chrono::DateTime<chrono::Local> = chrono::offset::Local::now();
 
 	// the time is image's file name
 	let image_path = format!("{}/{}.{}", PATH, time.format("%H_%M_%S_%m_%d"), FILE_FORMAT);
