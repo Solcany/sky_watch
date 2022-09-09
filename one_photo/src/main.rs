@@ -13,7 +13,7 @@ fn main() {
 	const COMMAND_END:  &str = " ~/Desktop";
 
     let settings = rascam::CameraSettings {
-        encoding: MMAL_ENCODING_RGB24,
+        encoding: rascam::MMAL_ENCODING_RGB24,
         width: 0,
         height: 0,
         iso: rascam::ISO_AUTO,
