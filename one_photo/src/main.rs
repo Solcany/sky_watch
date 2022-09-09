@@ -1,10 +1,12 @@
-use chrono;
-use rascam;
+use chrono::Local;
+use std::thread;
+use std::time;
 use std::fs;
+use rascam;
 use std::io::Write;
 
-
 fn main() {
+	const DELAY: std::time::Duration = time::Duration::from_secs(3);	
 	const PATH: &str = "./images";	
 	const FILE_FORMAT: &str = "jpg";
 
@@ -30,8 +32,12 @@ fn main() {
 	// the time is image's file name
 	let image_path = format!("{}/{}.{}", PATH, time.format("%H_%M_%S_%m_%d"), FILE_FORMAT);
 
+	thread::sleep(DELAY);
+
 	// take photo
 	let photo = camera.take_one().unwrap();
+
+	thread::sleep(DELAY);	
 
 	// create and save the image file
 	fs::File::create(&image_path).unwrap().write_all(&photo).unwrap();
