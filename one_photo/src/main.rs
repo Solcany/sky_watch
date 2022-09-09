@@ -34,8 +34,7 @@ fn main() {
     let active_cam = info.cameras[0].clone();
 
     // initiate the camera
-    let mut camera = rascam::SimpleCamera::new(active_cam).unwrap();
-    camera.configure(settings);
+    let mut camera = rascam::SimpleCamera::new(active_cam).configure(settings).unwrap();
 
     camera.activate().unwrap();
 
