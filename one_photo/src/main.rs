@@ -3,7 +3,7 @@ use std::thread;
 use std::time;
 use std::fs;
 use rascam;
-use std::io;
+use std::io::Write;
 
 
 fn main() {
