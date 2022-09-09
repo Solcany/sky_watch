@@ -35,6 +35,8 @@ fn main() {
 
     // initiate the camera
     let mut camera = rascam::SimpleCamera::new(active_cam).unwrap();
+    camera.set_camera_format(&settings).unwrap();
+    
     camera.activate().unwrap();
 
 	// get current time
