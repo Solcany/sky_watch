@@ -12,6 +12,16 @@ fn main() {
 	const COMMAND_START: &str = "scp m@192.168.1.77:~/Documents/rust/sky_watch/one_photo/";
 	const COMMAND_END:  &str = " ~/Desktop";
 
+    let settings = rascam::CameraSettings {
+        encoding: MMAL_ENCODING_RGB24,
+        width: 0,
+        height: 0,
+        iso: rascam::ISO_AUTO,
+        zero_copy: true,
+        use_encoder: false,
+    };
+
+
 	// get information about all installed cameras
     let info = rascam::info().unwrap();
 
