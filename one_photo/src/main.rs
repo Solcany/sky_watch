@@ -1,21 +1,12 @@
 use chrono;
-use std::thread;
-use std::time;
-use std::fs;
 use rascam;
+use std::fs;
 use std::io::Write;
 
 
 fn main() {
-	const DELAY: std::time::Duration = time::Duration::from_secs(3);
-	const PATH: &str = "images";	
+	const PATH: &str = "./images";	
 	const FILE_FORMAT: &str = "jpg";
-
-	// the current date is the photo folder's name
-	//let dir_name: String = format!("{}/{}", PATH, date.format("%d_%m_%y"));
-
-	// create the photo folder
-	fs::create_dir(PATH).unwrap();
 
 	// get information about all installed cameras
     let info = rascam::info().unwrap();
@@ -46,8 +37,5 @@ fn main() {
 	fs::File::create(&image_path).unwrap().write_all(&photo).unwrap();
 
 	println!("image '{}' saved", &image_path);
-
-	// wait a bit
-	thread::sleep(DELAY);
 
 }

@@ -8,7 +8,7 @@ use std::io::Write;
 
 fn main() {
 	const DELAY: std::time::Duration = time::Duration::from_secs(3);
-	const PATH: &str = "images";	
+	const PATH: &str = "./images";	
 	const FILE_FORMAT: &str = "jpg";
 
 	// get current date
