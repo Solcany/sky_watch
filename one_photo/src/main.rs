@@ -35,17 +35,18 @@ fn main() {
 	// the time is image's file name
 	let image_path = format!("{}/{}.{}", PATH, time.format("%H_%M_%S_%m_%d"), FILE_FORMAT);
 
-//	thread::sleep(DELAY);
-
 	// take photo
 	let photo = camera.take_one().unwrap();
 
-//	thread::sleep(DELAY);	
+	// sleep controls how long will the camera be exposed to the light
+	// thread::sleep(DELAY);	
 
 	// create and save the image file
 	fs::File::create(&image_path).unwrap().write_all(&photo).unwrap();
 
 	println!("image '{}' saved", &image_path);
+
+	// print the bash command for copying the image from raspbery pi to the laptop
 	println!("{}{}/{}", COMMAND_START, &image_path, COMMAND_END);
 
 }
