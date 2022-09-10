@@ -12,15 +12,6 @@ fn main() {
 	const COMMAND_START: &str = "scp m@192.168.1.77:~/Documents/rust/sky_watch/one_photo/";
 	const COMMAND_END:  &str = " ~/Desktop";
 
-    let mut settings = rascam::CameraSettings {
-        encoding: rascam::MMAL_ENCODING_RGB24,
-        width: 0,
-        height: 0,
-        iso: rascam::ISO_AUTO,
-        zero_copy: true,
-        use_encoder: false,
-    };
-
 	// get information about all installed cameras
     let info = rascam::info().unwrap();
 
@@ -34,7 +25,7 @@ fn main() {
     let active_cam = info.cameras[0].clone();
 
     // initiate the camera
-    let mut camera = rascam::SimpleCamera::new(active_cam).configure(settings).unwrap();
+    let mut camera = rascam::SimpleCamera::new(active_cam).unwrap();
 
     camera.activate().unwrap();
 
