@@ -7,8 +7,8 @@ use std::io::Write;
 
 
 fn main() {
-	const DELAY: std::time::Duration = time::Duration::from_secs(3);
-	const PATH: &str = "images";	
+	const DELAY: std::time::Duration = time::Duration::from_secs(1);
+	const PATH: &str = "./images";	
 	const FILE_FORMAT: &str = "jpg";
 
 	// get current date
@@ -17,7 +17,7 @@ fn main() {
 	// the current date is the photo folder's name
 	let dir_name: String = format!("{}/{}", PATH, date.format("%d_%m_%y"));
 
-	// create the photo folder
+	// create the photo folder if it doesn't exist
 	fs::create_dir_all(&dir_name).unwrap();
 
 	// get information about all installed cameras
@@ -46,13 +46,13 @@ fn main() {
 		// take photo
 		let photo = camera.take_one().unwrap();
 
+		// sleep controls how long will the camera be exposed to the light
+		thread::sleep(DELAY);	
+
 		// create and save the image file
     	fs::File::create(&image_path).unwrap().write_all(&photo).unwrap();
 
 		println!("image '{}' saved", &image_path);
-
-		// wait a bit
-		thread::sleep(DELAY);
 	}
 
 }
