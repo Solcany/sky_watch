@@ -1,21 +1,6 @@
 use image;
 use csv::Writer;
 use std::fs;
-// use std::error::Error;
-
-
-// fn get_arr_size(w: &u32, h: &u32) -> usize {
-// 	let size = w * h;
-// 	size as usize
-// }
-
-// fn add_record_to_writer(writer: &Writer, arr: &[String]) {
-//     //let mut wtr = Writer::from_path("image_data.csv")?;
-//     writer.write_record(&arr)?;
-//     //wtr.flush()?;
-//     //Ok(())
-// }
-
 
 fn main() {
 	const IN_PATH : &str = "./images/friday/low_res";
@@ -67,7 +52,7 @@ fn main() {
 		// initiate empty array of SAMPLE_SIZE filled with zeroes
 		let mut pixels :[f32; SAMPLE_SIZE] = [0.0; SAMPLE_SIZE];
 		// normalise 0 – 255 pixel values to 0.0 – 1.0 range
-		for (i, pixel) in rezized_img.pixels() 
+		for (i, pixel) in rezized_img.pixels() // get pixels iterator
 									 .enumerate() { // get indices
 			pixels[i] = pixel.0[0] as f32 / 255.0;  // cast integer to float
 		}
