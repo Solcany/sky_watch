@@ -10,9 +10,11 @@ fn main() {
 	const OUT_PATH : &str = "./images/gray.jpg";
 	const CROP_X: u32 = 0;
 	const CROP_Y: u32 = 0;
-	const CROP_WIDTH : u32 = 10;
-	const CROP_HEIGHT : u32 = 10;
-	const SIZE: usize = 100;
+	const CROP_WIDTH : u32 = 800;
+	const CROP_HEIGHT : u32 = 800;
+	const SAMPLE_WIDTH: u32 = 10;
+	const SAMPLE_HEIGHT: u32 = 10;
+	const SAMPLE_SIZE: usize = 100;
 
 	// load image
 	let img = image::open(IMAGE_PATH).unwrap();
@@ -22,12 +24,21 @@ fn main() {
 
 	// crop_imm returns immutable view into the image (SubImage type)
 	// .to_image fn converts the view into an ImageBuffer
-	let cropped_img = image::imageops::crop_imm(&grayscale_img, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT).to_image();
+	let cropped_img = image::imageops::crop_imm(&grayscale_img, 
+												CROP_X, 
+												CROP_Y, 
+												CROP_WIDTH, 
+												CROP_HEIGHT).to_image();
 
 
-	let mut values :[u8; SIZE] = [0; SIZE];
-	for (i, pixel) in cropped_img.pixels().enumerate() {
-		values[i] = pixel.0[0];
+	let rezized_img = image::imageops::resize(&cropped_img, 
+											  SAMPLE_WIDTH, 
+											  SAMPLE_HEIGHT, 
+											  image::imageops::FilterType::Gaussian);
+
+	let mut values :[f32; SAMPLE_SIZE] = [0.0; SAMPLE_SIZE];
+	for (i, pixel) in rezized_img.pixels().enumerate() {
+		values[i] = pixel.0[0] as f32 / 255.0; 
 	}
 	println!("{}", values[0]);
 
