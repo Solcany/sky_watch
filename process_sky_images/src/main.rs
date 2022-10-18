@@ -25,6 +25,7 @@ fn main() {
     														       .collect();
     image_paths.sort_by_key(|f| f.path());    
 
+    
     for path in image_paths {
 
     	println!("working on image: {}", &path.path().display());
