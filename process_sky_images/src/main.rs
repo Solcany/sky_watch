@@ -21,11 +21,11 @@ fn main() {
 	const CROP_WIDTH : u32 = 800; // how wide is the crop of the original image?
 	const CROP_HEIGHT : u32 = 800;
 	const SAMPLE_WIDTH: u32 = 16; // to what width should the image be down sized?
-	const SAMPLE_HEIGHT: u32 = 8;
-	const SAMPLE_SIZE: usize = 128; // how many pixels are in the sample? ( basically SAMPLE_WIDTH * SAMPLE_HEIGHT)
+	const SAMPLE_HEIGHT: u32 = 16;
+	const SAMPLE_SIZE: usize = 256; // how many pixels are in the sample? ( basically SAMPLE_WIDTH * SAMPLE_HEIGHT)
 	const C_MIN : f32 = 0.0; // low limit of the color range of image
 	const C_MAX : f32 = 255.0; // high limit of the color range of image
-	const NEW_MIN : f32 = -1.0; // low limit of the new range
+	const NEW_MIN : f32 = 0.0; // low limit of the new range
 	const NEW_MAX : f32 = 1.0; // high limit of the new range
 
 	// create all export dirs if they don't exist
