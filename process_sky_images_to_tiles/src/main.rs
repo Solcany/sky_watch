@@ -2,20 +2,17 @@ use image;
 use csv::Writer;
 use std::fs;
 
+const IN_PATH : &str = "./images/friday/small_batch";
+const OUT_PATH : &str = "./data/tile_data";
+const IMAGE_WIDTH: u32 = 340;
+// const IMAGE_HEIGHT: u32 = 600;
+const GRID_WIDTH: u32 = 320;
+const GRID_COLS: u32 = 4;
+const GRID_ROWS: u32 = 4;
+const EXPORT_TILE_WIDTH: u32 = 16;
+const TILE_ASPECT_RATIO: f32 = 1.0;
+
 fn main() {
-	const TILES_X : i32 = 2;
-	const TILES_Y : i32 = 2;
-	const IN_PATH : &str = "./images/friday/low_res";
-	const OUT_PATH : &str = "./data";
-	const CROP_X: u32 = 0;
-	const CROP_Y: u32 = 0;
-	const IMAGE_WIDTH: u32 = 340;
-	const IMAGE_HEIGHT: u32 = 600;
-	const CROP_WIDTH : u32 = 50;
-	const CROP_HEIGHT : u32 = 50;
-	const SAMPLE_WIDTH: u32 = 10;
-	const SAMPLE_HEIGHT: u32 = 10;
-	const SAMPLE_SIZE: usize = 100;
 
 	// make the paths mutable so they can be sorted
     let mut image_paths : Vec<fs::DirEntry> = fs::read_dir(IN_PATH).unwrap()
@@ -23,59 +20,74 @@ fn main() {
     														       .collect();
     image_paths.sort_by_key(|f| f.path());    
 
-    let mut csv_writers = Vec::new();
-    for idx in 0..TILES_X*TILES_Y {
-	let out_csv_path : String = format!("{}/tile_data{}.jpg", OUT_PATH, idx.to_string());
-    	csv_writers.push(Writer::from_path(out_csv_path).unwrap());
+    // create a separate csv for every tile of the image
+    let mut writers = Vec::new();
+    for idx in 0..GRID_COLS*GRID_ROWS {
+	let out_csv_path : String = format!("{}/tile{}.csv", OUT_PATH, idx.to_string());
+    	writers.push(Writer::from_path(out_csv_path).unwrap());
     }
 
-    for (idx, path) in image_paths.iter().enumerate() {
+    // where is the start of the first tile on x ax?
+    let x_start: u32 = (IMAGE_WIDTH - GRID_WIDTH) / 2;
+    // how wide is the tile?
+    let tile_width : u32 = GRID_WIDTH / GRID_COLS;
+    // how tall is it?
+    let tile_height : u32 = (tile_width as f32 * TILE_ASPECT_RATIO).ceil() as u32;
+    // how high is the grid?
+    let grid_height : u32 = tile_height * GRID_ROWS;
+    // where does the first tile start on the y ax?
+    let y_start: u32 = (IMAGE_WIDTH - grid_height) / 2;
+    // the tile will be scaled down to export tile height
+    let export_tile_height: u32 = (EXPORT_TILE_WIDTH as f32 * TILE_ASPECT_RATIO).ceil() as u32;
 
+    for path in image_paths.iter() {
     	println!("working on image: {}", &path.path().display());
-
 		// load image
 		let img = image::open(&path.path()).unwrap();
-
 		// grayscale fn returns ImageBuffer
 		let grayscale_img = image::imageops::colorops::grayscale(&img);
 
-		for x in 1..=TILES_X {
-			for y in 1..=TILES_Y {
+		for x in 0..GRID_ROWS {
+			let x_pos = x_start + (x * tile_width);
+			for y in 0..GRID_COLS {
+				let y_pos = y_start + (y * tile_height);
+
 				// crop_imm returns immutable view into the image (SubImage type)
 				// .to_image fn converts the view into an ImageBuffer
 				let cropped_img = image::imageops::crop_imm(&grayscale_img, 
-															CROP_X, 
-															CROP_Y, 
-															CROP_WIDTH, 
-															CROP_HEIGHT).to_image();
+															x_pos, 
+															y_pos, 
+															tile_width, 
+															tile_height).to_image();
 
 				// borrows ImageBuffer and returns a new ImageBuffer
 				let rezized_img = image::imageops::resize(&cropped_img, 
-														  SAMPLE_WIDTH, 
-														  SAMPLE_HEIGHT, 
+														  EXPORT_TILE_WIDTH, 
+														  export_tile_height, 
 														  image::imageops::FilterType::Gaussian);
 
-				// initiate empty array of SAMPLE_SIZE filled with zeroes
-				let mut pixels :[f32; SAMPLE_SIZE] = [0.0; SAMPLE_SIZE];
+				let mut pixels: Vec<f32> = Vec::new();
 				// normalise 0 – 255 pixel values to 0.0 – 1.0 range
-				for (i, pixel) in rezized_img.pixels() // get pixels iterator
-											 .enumerate() { // get indices
-					pixels[i] = pixel.0[0] as f32 / 255.0;  // cast integer to float
+				for pixel in rezized_img.pixels()  { // get indices
+					pixels.push(pixel.0[0] as f32 / 255.0);  // cast integer to float
 				}
 
-				// conver the float values to strings
-				// note: the new 'values' var declaration shadows the previous one
+				// shadow the pixels var
+				// convert the float values to strings
 			    let pixels : Vec<String> = pixels.into_iter() // array to iterator
-			    								 .map(|v| v.to_string()) // convert float to string
-			    								 .collect(); // iterator to collection				
+			    						   .map(|v| v.to_string()) // convert float to string
+			    						   .collect(); // iterator to collection
+	    		// write the tile data to its csv
+	    		let writer_index: usize = (x * GRID_ROWS + y) as usize;
+	    		writers[writer_index].write_record(&pixels).unwrap();
+
 			}
 		}
-
-	    // write a new row to the csv
-	    //writer.write_record(&pixels).unwrap();
 	};
 
-	//writer.flush().unwrap();
+	for mut writer in writers {
+		writer.flush().unwrap();
+	}
 	println!("{}", "done!");
 
 	//cropped_img.save(OUT_PATH).unwrap();
