@@ -4,6 +4,10 @@ use std::fs;
 
 const IN_PATH : &str = "./images/friday/small_batch";
 const OUT_PATH : &str = "./data/tile_data";
+const PIXEL_MIN: f32 = 0.0;
+const PIXEL_MAX: f32 = 255.0;
+const NEW_PIXEL_MIN: f32 = -1.0;
+const NEW_PIXEL_MAX: f32 = 1.0;
 const IMAGE_WIDTH: u32 = 340;
 // const IMAGE_HEIGHT: u32 = 600;
 const GRID_WIDTH: u32 = 320;
@@ -12,21 +16,25 @@ const GRID_ROWS: u32 = 4;
 const EXPORT_TILE_WIDTH: u32 = 16;
 const TILE_ASPECT_RATIO: f32 = 1.0;
 
+fn lerp_range(value: &f32, min1: &f32, max1: &f32, min2: &f32, max2: &f32) -> f32{
+  ((value - min1) * (max2 - min2)) / (max1 - min1) + min2
+}
+
 fn main() {
+	assert!(GRID_WIDTH / GRID_COLS > EXPORT_TILE_WIDTH, "too many tiles, decrease GRID_COLS");
+	assert!(GRID_WIDTH <= IMAGE_WIDTH, "Grid is wider than the image, decrease GRID_WIDTH");
 
 	// make the paths mutable so they can be sorted
     let mut image_paths : Vec<fs::DirEntry> = fs::read_dir(IN_PATH).unwrap()
     														   	   .map(|f| f.unwrap())
     														       .collect();
     image_paths.sort_by_key(|f| f.path());    
-
     // create a separate csv for every tile of the image
     let mut writers = Vec::new();
     for idx in 0..GRID_COLS*GRID_ROWS {
 	let out_csv_path : String = format!("{}/tile{}.csv", OUT_PATH, idx.to_string());
     	writers.push(Writer::from_path(out_csv_path).unwrap());
     }
-
     // where is the start of the first tile on x ax?
     let x_start: u32 = (IMAGE_WIDTH - GRID_WIDTH) / 2;
     // how wide is the tile?
@@ -67,9 +75,10 @@ fn main() {
 														  image::imageops::FilterType::Gaussian);
 
 				let mut pixels: Vec<f32> = Vec::new();
-				// normalise 0 – 255 pixel values to 0.0 – 1.0 range
-				for pixel in rezized_img.pixels()  { // get indices
-					pixels.push(pixel.0[0] as f32 / 255.0);  // cast integer to float
+				// rerange 0 – 255 pixel values to NEW_PIXEL_MIN – NEW_PIXEL_MAX range
+				for pixel in rezized_img.pixels()  { 
+					let pix_val = pixel.0[0] as f32;
+					pixels.push(lerp_range(&pix_val, &PIXEL_MIN, &PIXEL_MAX, &NEW_PIXEL_MIN, &NEW_PIXEL_MAX));
 				}
 
 				// shadow the pixels var
@@ -77,7 +86,7 @@ fn main() {
 			    let pixels : Vec<String> = pixels.into_iter() // array to iterator
 			    						   .map(|v| v.to_string()) // convert float to string
 			    						   .collect(); // iterator to collection
-	    		// write the tile data to its csv
+	    		// write the tile data to dedicated csv writer
 	    		let writer_index: usize = (x * GRID_ROWS + y) as usize;
 	    		writers[writer_index].write_record(&pixels).unwrap();
 
