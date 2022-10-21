@@ -3,8 +3,8 @@ use csv::Writer;
 use std::fs;
 
 const IN_PATH : &str = "./images/friday/small_batch";
-const CSV_OUT_PATH : &str = "./data/tile_data/csv/";
-const IMAGE_OUT_PATH_ROOT: &str ="./data/tile_data/image/";
+const CSV_OUT_PATH : &str = "./data/output/friday_tiles/csv/";
+const IMAGE_OUT_PATH_ROOT: &str ="./data/output/friday_tiles/image/";
 const PIXEL_MIN: f32 = 0.0;
 const PIXEL_MAX: f32 = 255.0;
 const NEW_PIXEL_MIN: f32 = -1.0;
@@ -21,9 +21,14 @@ fn lerp_range(value: &f32, min1: &f32, max1: &f32, min2: &f32, max2: &f32) -> f3
 }
 
 fn main() {
-	assert!((IMAGE_WIDTH as f32 * GRID_WIDTH_RATIO) / GRID_COLS as f32 > EXPORT_TILE_WIDTH as f32, "too many tiles, decrease GRID_COLS");
-	assert!(GRID_WIDTH_RATIO > 1.0, "GRID_WIDTH_RATIO must be less or equal to 1.0");
-	assert!(GRID_WIDTH_RATIO <= 0.0, "GRID_WIDTH_RATIO must be more than 0.0");
+	// check if the constants are valid
+	assert!(((IMAGE_WIDTH as f32 * GRID_WIDTH_RATIO) / GRID_COLS as f32) >= EXPORT_TILE_WIDTH as f32, "too many tiles, decrease GRID_COLS");
+	assert!(GRID_WIDTH_RATIO < 1.0, "GRID_WIDTH_RATIO must be less or equal to 1.0");
+	assert!(GRID_WIDTH_RATIO >= 0.0, "GRID_WIDTH_RATIO must be more than 0.0");
+
+	// create output folders
+	fs::create_dir_all(CSV_OUT_PATH).unwrap();
+	fs::create_dir_all(IMAGE_OUT_PATH_ROOT).unwrap();
 
 	// make the paths mutable so they can be sorted
     let mut image_paths : Vec<fs::DirEntry> = fs::read_dir(IN_PATH).unwrap()
@@ -93,16 +98,16 @@ fn main() {
 	    		let writer_index: usize = (x * GRID_ROWS + y) as usize;
 	    		writers[writer_index].write_record(&pixels).unwrap();
 
-	    		// create dir for each tile
+	    		// create dir for each tile's images
 	    		let tile_images_folder_path: String = format!("{}{}", IMAGE_OUT_PATH_ROOT, writer_index.to_string());
 	    		fs::create_dir_all(&tile_images_folder_path).unwrap();
-	    		let image_path = format!("{}/{}.jpg", tile_images_folder_path, image_index.to_string());
+	    		// save the image
+	    		let image_path = format!("{}/tile{}.jpg", tile_images_folder_path, image_index.to_string());
 				cropped_img.save(&image_path).unwrap();
 
 			}
 		}
 	};
-
 	for mut writer in writers {
 		writer.flush().unwrap();
 	}
