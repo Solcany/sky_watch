@@ -5,3 +5,5 @@ images/
 *.JPG
 *.JPG"
 output/
+process_sky_images/data/downsized/
+
