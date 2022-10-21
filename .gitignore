@@ -2,4 +2,8 @@ target/
 .DS_Store
 images/
 *.jpg
+*.JPG
+*.JPG"
+output/
 process_sky_images/data/downsized/
+
