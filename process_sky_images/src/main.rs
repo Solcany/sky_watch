@@ -85,7 +85,7 @@ fn main() {
 			pixels[i] = rerange_float(pixel.0[0] as f32, C_MIN, C_MAX, NEW_MIN, NEW_MAX);
 		}
 
-		// conver the float values to strings
+		// convert the float values to strings
 		// note: the new 'values' var declaration shadows the previous one
 	    let pixels : Vec<String> = pixels.into_iter() // array to iterator
 	    								 .map(|v| v.to_string()) // convert float to string
