@@ -1,0 +1,16 @@
+[package]
+name = "interval_data_cam"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gphoto2 = "3.1.0"
+image = "0.24.5"
+chrono = "0.4.23"
+csv = "1.1.6"
+reqwest = {version = "0.11.14", features=["blocking", "json"]}
+serde = {version= "1.0.152", features=["derive"]}
+serde_json = "1.0.91"
+turbojpeg = "0.5.2"

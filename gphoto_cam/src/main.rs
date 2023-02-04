@@ -1,5 +1,6 @@
 use gphoto2::{Context, Result};
 use std::{path, fs, thread, time};
+use std::fs::create_dir_all;
 use image;
 
 const EXPORT_FOLDER : &str = "./images/";
@@ -7,7 +8,7 @@ const DELAY_SECONDS : u32 = 4;
 
 fn main() -> Result<()> {
   // create all export dirs if they don't exist
-  fs::create_dir_all(EXPORT_FOLDER).unwrap();
+  create_dir_all(EXPORT_FOLDER).unwrap();
   let context = Context::new()?;
   //let delay = time::Duration::from_secs(DELAY_SECONDS as u64);
   let camera = context.autodetect_camera().wait()?;
