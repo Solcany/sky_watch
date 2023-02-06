@@ -4,7 +4,7 @@ use std::path::Path;
 use std::thread;
 use std::fs::{create_dir_all, OpenOptions, write};
 use gphoto2::{Context, Camera, Result};
-use image::{DynamicImage, ImageFormat, load_from_memory_with_format, imageops};
+use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba, load_from_memory_with_format, imageops};
 use turbojpeg;
 use reqwest::blocking::get;
 use serde_json::Value;
@@ -14,10 +14,16 @@ use chrono::{Local, Datelike, Timelike};
 
 const OUTPUT_PATH : &str = "./output/sessions";
 const IMAGES_FOLDER : &str = "images";
-const IMAGE_EXT : &str = ".jpg";
 const CSV_FOLDER : &str = "csv";
 const DELAY_SECONDS : u32 = 4;
 const IMAGE_SCALAR : f32 = 0.5;
+const JPG_COMPRESSION : i32 = 70;
+
+const DATA_URL : &str = "https://data.buienradar.nl/2.0/feed/json";
+const OUT_PATH : &str = "./";
+const CSV_NAME : &str = "data.csv";
+
+
 
 fn get_session_name() -> String {
     let current_datetime = Local::now();
@@ -32,7 +38,6 @@ fn get_session_name() -> String {
 fn create_session_output_dir(session_name : &String) {
     let images_path : String = format!("{}/{}/{}", OUTPUT_PATH, &session_name, IMAGES_FOLDER);
     let csv_path : String = format!("{}/{}/{}", OUTPUT_PATH, &session_name, CSV_FOLDER);
-
     // create all export dirs if they don't exist
     create_dir_all(&images_path).unwrap();    
     create_dir_all(&csv_path).unwrap();    
@@ -57,22 +62,21 @@ fn capture_photo(camera_context : &Context, camera : &Camera) -> Result<(Dynamic
         .unwrap();
     Ok((photo_image, photo_name.to_string()))
 }
-
-fn process_save_image(image: DynamicImage, path : String) -> Result<()> {
+fn process_image(image: DynamicImage) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
     let new_width : u32 = (image.width() as f32 * IMAGE_SCALAR).floor() as u32;
     let new_height : u32 = (image.height() as f32 * IMAGE_SCALAR).floor() as u32;
     let new_image = imageops::resize(&image, 
                                      new_width, 
                                      new_height, 
                                      imageops::FilterType::Gaussian); 
-
-    let data = turbojpeg::compress_image(&new_image, 70, turbojpeg::Subsamp::Sub2x2).unwrap();
-
-    write(&path, &data).unwrap();
-    //data.save_with_format(path, image::ImageFormat::Jpeg).unwrap();
+    Ok(new_image)
+}
+fn save_image(image : ImageBuffer<Rgba<u8>, Vec<u8>>, path: String) -> Result<()> {
+    let jpg_data = turbojpeg::compress_image(&image, JPG_COMPRESSION, turbojpeg::Subsamp::Sub2x2).unwrap();
+    write(&path, &jpg_data).unwrap();
     Ok(())
 }
-
+    
 fn main() -> Result<()> {
     let session_name : String = get_session_name();
     create_session_output_dir(&session_name);
@@ -86,11 +90,11 @@ fn main() -> Result<()> {
         Ok(image_data) => {
             println!("image captured successfully");
             let (image, image_name) = image_data;
-            let output_path : String = format!("{}/{}/{}/{}.{}", OUTPUT_PATH, &session_name, IMAGES_FOLDER, &image_name, IMAGE_EXT);
-
-            match process_save_image(image, output_path) {
-                Ok(()) => {
-                    println!("image: {} saved", &image_name);
+            let processed_image = process_image(image).unwrap();
+            let output_path : String = format!("{}/{}/{}/{}", OUTPUT_PATH, &session_name, IMAGES_FOLDER, &image_name);
+            match save_image(processed_image, output_path) {
+                Ok(processed_image) => {
+                    println!("image: {} saved", &output_path);
                 }
                 Err(err) => {
                     println!("failed to save the image");
@@ -101,31 +105,5 @@ fn main() -> Result<()> {
             println!("failed to capture image");
         }
       }    
-
-  // let captured_file_path = camera
-  //   .capture_image()
-  //   .wait()?;
-
-  // let captured_file = camera
-  //   .fs()
-  //   .download(&captured_file_path.folder(), &captured_file_path.name())
-  //   .wait()
-  //   .unwrap();
-
-  // let photo_name = captured_file.name();
-  // let photo_bytes = captured_file
-  //   .get_data(&context)
-  //   .wait()?;  
-
-  // match image::load_from_memory_with_format(&photo_bytes, image::ImageFormat::Jpeg) {
-  //   Ok(image) => {
-  //       //write("output.jpg", &bytes).unwrap();
-  //   }
-  //   Err(_) => {
-  //       println!("input is not png");
-  //   }
-  // }
-
-
     Ok(())
 } 
