@@ -2,7 +2,7 @@ use std::time::Duration;
 use std::thread::sleep;
 use std::path::Path;
 use std::thread;
-use std::fs::{create_dir_all, OpenOptions, write};
+use std::fs::{OpenOptions, File, create_dir_all, write};
 use gphoto2::{Context, Camera, Result};
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba, load_from_memory_with_format, imageops};
 use turbojpeg;
@@ -11,6 +11,7 @@ use serde_json::Value;
 use serde::Serialize;
 use csv::Writer;
 use chrono::{Local, Datelike, Timelike};
+use std::process::abort;
 
 const OUTPUT_PATH : &str = "./output/sessions";
 const IMAGES_FOLDER : &str = "images";
@@ -20,10 +21,18 @@ const IMAGE_SCALAR : f32 = 0.5;
 const JPG_COMPRESSION : i32 = 70;
 
 const DATA_URL : &str = "https://data.buienradar.nl/2.0/feed/json";
-const OUT_PATH : &str = "./";
 const CSV_NAME : &str = "data.csv";
 
-
+#[derive(Serialize)]
+struct Csv_row<> {
+    photo_name: String,
+    photo_timestamp: String,
+    air_pressure: f64,
+    temperature: f64,
+    feel_temperature: f64,    
+    weather_description: String,
+    weather_timestamp: String,    
+}
 
 fn get_session_name() -> String {
     let current_datetime = Local::now();
@@ -63,6 +72,7 @@ fn capture_photo(camera_context : &Context, camera : &Camera) -> Result<(Dynamic
     Ok((photo_image, photo_name.to_string()))
 }
 fn process_image(image: DynamicImage) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
+    // rescale the image
     let new_width : u32 = (image.width() as f32 * IMAGE_SCALAR).floor() as u32;
     let new_height : u32 = (image.height() as f32 * IMAGE_SCALAR).floor() as u32;
     let new_image = imageops::resize(&image, 
@@ -71,13 +81,53 @@ fn process_image(image: DynamicImage) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> 
                                      imageops::FilterType::Gaussian); 
     Ok(new_image)
 }
-fn save_image(image : ImageBuffer<Rgba<u8>, Vec<u8>>, path: String) -> Result<()> {
+
+fn save_image(image : ImageBuffer<Rgba<u8>, Vec<u8>>, path: &String) -> Result<()> {
+    // compress the jpg image
     let jpg_data = turbojpeg::compress_image(&image, JPG_COMPRESSION, turbojpeg::Subsamp::Sub2x2).unwrap();
     write(&path, &jpg_data).unwrap();
     Ok(())
 }
+
+fn fetch_eindhoven_weather_data() -> Option<Value> {
+    // fetch weather data from the buienradar api
+    let weather_json = get(DATA_URL)
+        .unwrap()
+        .json::<serde_json::Value>()
+        .unwrap();
+
+    // get relevant data from the json
+    let weather_stations_data = weather_json["actual"]["stationmeasurements"]
+        .as_array()
+        .unwrap();
+
+    // initialise return variable
+    let mut eindhoven_data : Option<serde_json::Value> = None;
+
+    // find eindhoven data
+    for station_data in weather_stations_data.iter() {
+        if station_data["stationname"] == "Meetstation Eindhoven" {
+            // create a copy
+            eindhoven_data = Some(station_data.clone());
+        }
+    }
+    eindhoven_data
+}
+
+fn get_photo_timestamp() -> String {
+    let current_datetime = Local::now();
+    let year = current_datetime.year();
+    let month = current_datetime.month0();
+    let day = current_datetime.day0(); 
+    let hour = current_datetime.hour();        
+    let minute = current_datetime.minute();
+    let second = current_datetime.second();
+    let timezone : &str = "+01:00";
+    format!("{}-{}-{}-{}:{}:{}-{}", year, month, day, hour, minute, second, timezone)
+}
     
 fn main() -> Result<()> {
+    // get current datetime as the session name
     let session_name : String = get_session_name();
     create_session_output_dir(&session_name);
 
@@ -85,22 +135,71 @@ fn main() -> Result<()> {
     let camera_context = Context::new()?;
     let camera = camera_context.autodetect_camera().wait()?;
 
-    // take a photo
+    //initiate the csv writer
+    let csv_path : String = format!("{}/{}/{}/{}", OUTPUT_PATH, &session_name, CSV_FOLDER, CSV_NAME);    
+    let mut csv_writer; 
+    // initialise the csv writer
+    if Path::new(&csv_path).exists() {
+        // if there's existing csv on the path append new rows to it
+        let csv_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(csv_path)
+            .unwrap();
+        csv_writer = Writer::from_writer(csv_file);
+    } else {
+        // otherwise create new csv file 
+        csv_writer = Writer::from_path(csv_path).unwrap();
+    }    
+
+    // photo 
+    let photo_timestamp : String = get_photo_timestamp();
+    // take a photo    
     match capture_photo(&camera_context, &camera) {
         Ok(image_data) => {
-            println!("image captured successfully");
+            println!("image captured");
             let (image, image_name) = image_data;
             let processed_image = process_image(image).unwrap();
-            let output_path : String = format!("{}/{}/{}/{}", OUTPUT_PATH, &session_name, IMAGES_FOLDER, &image_name);
-            match save_image(processed_image, output_path) {
-                Ok(processed_image) => {
-                    println!("image: {} saved", &output_path);
-                }
+            // download weather data from buienradar
+            // wip: weather data should be downloaded immediately after gphoto2's capture_image
+            // is called. Currently weather data capture is delayed by ~ 1 minute by
+            // image data being downloaded from the camera
+            let data_row : Csv_row = match fetch_eindhoven_weather_data() {
+                Some(data) => {
+                    Csv_row {  
+                        photo_name: image_name.clone(),
+                        photo_timestamp: photo_timestamp,
+                        air_pressure: data["airpressure"].as_f64().unwrap(),
+                        temperature: data["temperature"].as_f64().unwrap(),
+                        feel_temperature: data["feeltemperature"].as_f64().unwrap(),
+                        weather_description: data["weatherdescription"].as_str().unwrap().to_string(),                          
+                        weather_timestamp: data["timestamp"].as_str().unwrap().to_string().to_string(),
+                    }
+                },
+                None => {
+                    println!("failed to fetch weather data, aborting.");
+                    abort();
+                },
+            };
+            let image_path : String = format!("{}/{}/{}/{}", OUTPUT_PATH, &session_name, IMAGES_FOLDER, &image_name);
+            match save_image(processed_image, &image_path) {
+                Ok(()) => {
+                    println!("image: '{}' saved", &image_path);
+                    // write csv row if image was saved successfuly
+                    csv_writer.serialize(data_row).unwrap();
+                    match csv_writer.flush() {
+                        Ok(()) => { csv_writer.flush().unwrap();
+                                    println!("csv row written"); 
+                        },
+                        Err(err) => println!("failed to write data row"),                        
+                    }
+                },
                 Err(err) => {
-                    println!("failed to save the image");
+                    println!("failed to save the '{}' image", &image_path);
                 }
             }
-        }
+        },
         Err(err) => {
             println!("failed to capture image");
         }
