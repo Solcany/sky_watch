@@ -4,3 +4,27 @@ air_pressure,temperature,feel_temperature,weather_description,timestamp
 1029.1,10.1,8.3,Zwaar bewolkt,2023-02-03T18:00:00
 1029.1,10.1,8.3,Zwaar bewolkt,2023-02-03T18:00:00
 1029.1,10.1,8.3,Zwaar bewolkt,2023-02-03T18:00:00
+air_pressure,temperature,feel_temperature,weather_description,timestamp
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+air_pressure,temperature,feel_temperature,weather_description,timestamp
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+1036.8,9.3,8.9,Zwaar bewolkt,2023-02-04T16:10:00
+air_pressure,temperature,feel_temperature,weather_description,timestamp
+1036.9,9.3,9.3,Zwaar bewolkt,2023-02-04T16:30:00
+1036.9,9.3,9.3,Zwaar bewolkt,2023-02-04T16:30:00
+1036.9,9.3,9.3,Zwaar bewolkt,2023-02-04T16:30:00
+1036.9,9.3,9.3,Zwaar bewolkt,2023-02-04T16:30:00
+1036.9,9.3,9.3,Zwaar bewolkt,2023-02-04T16:30:00
+photo_name,photo_timestamp,air_pressure,temperature,feel_temperature,weather_description,weather_timestamp
+name,heh,1037.0,8.8,8.5,Zwaar bewolkt,2023-02-04T17:20:00
+name,heh,1037.0,8.8,8.5,Zwaar bewolkt,2023-02-04T17:20:00
+name,heh,1037.0,8.8,8.5,Zwaar bewolkt,2023-02-04T17:20:00
+name,heh,1037.0,8.8,8.5,Zwaar bewolkt,2023-02-04T17:20:00
+name,heh,1037.0,8.8,8.5,Zwaar bewolkt,2023-02-04T17:20:00
