@@ -15,12 +15,12 @@ use std::process::abort;
 const OUTPUT_PATH : &str = "./output/sessions";
 const IMAGES_FOLDER : &str = "images";
 const CSV_FOLDER : &str = "csv";
-const DELAY_SECONDS : u32 = 4;
-const IMAGE_SCALAR : f32 = 0.5;
-const JPG_COMPRESSION : i32 = 70;
+const IMAGE_SCALAR : f32 = 1.0;
+const JPG_COMPRESSION : i32 = 80;
 const CAPTURE_DELAY_SECONDS : u32 = 240;
 const DATA_URL : &str = "https://data.buienradar.nl/2.0/feed/json";
 const CSV_NAME : &str = "data.csv";
+const TIMEZONE : &str = "+01:00";
 
 #[derive(Serialize)]
 struct Csv_row<> {
@@ -124,7 +124,7 @@ fn fetch_eindhoven_weather_data() -> Option<Value> {
     eindhoven_data
 }
 
-fn get_photo_timestamp() -> String {
+fn get_timestamp() -> String {
     let current_datetime = Local::now();
     let year = current_datetime.year();
     let month = current_datetime.month();
@@ -132,8 +132,14 @@ fn get_photo_timestamp() -> String {
     let hour = current_datetime.hour();        
     let minute = current_datetime.minute();
     let second = current_datetime.second();
-    let timezone : &str = "+01:00";
-    format!("y:{}-m:{}-d:{}-h:{}-mn:{}-s:{}-t:{}", year, month, day, hour, minute, second, timezone)
+
+    let month_padded = format!("{:0>2}", month);
+    let day_padded = format!("{:0>2}", day);
+    let hour_padded = format!("{:0>2}", hour);
+    let minute_padded = format!("{:0>2}", minute);
+    let second_padded = format!("{:0>2}", second);
+
+    format!("{}-{}-{}T{}:{}:{}{}", year, month_padded, day_padded, hour_padded, minute_padded, second_padded, TIMEZONE)
 }
     
 fn main() -> Result<()> { 
@@ -168,7 +174,7 @@ fn main() -> Result<()> {
     loop {
         println!("starting capture n: {}", photo_count);
 
-        let photo_timestamp : String = get_photo_timestamp();
+        let photo_timestamp : String = get_timestamp();
         // take a photo    
         match capture_photo(&camera_context, &camera) {
             Ok(image_data) => {
@@ -181,6 +187,7 @@ fn main() -> Result<()> {
                 // image data being downloaded from the camera
                 let data_row : Csv_row = match fetch_eindhoven_weather_data() {
                     Some(data) => {
+                        println!("weather data fetched");                        
                         Csv_row {  
                             photo_name: image_name.clone(),
                             photo_timestamp: photo_timestamp,
@@ -210,22 +217,22 @@ fn main() -> Result<()> {
                 let image_path : String = format!("{}/{}/{}/{}", OUTPUT_PATH, &session_name, IMAGES_FOLDER, &image_name);
                 match save_image(processed_image, &image_path) {
                     Ok(()) => {
-                        println!("image: '{}' saved", &image_path);
+                        println!("{}:  image: '{}' saved", get_timestamp(), &image_path);
                         // write csv row if image was saved successfuly
                         csv_writer.serialize(data_row).unwrap();
                         match csv_writer.flush() {
                             Ok(()) => { csv_writer.flush().unwrap();
                                         println!("csv row written"); 
                             },
-                            Err(err) => println!("failed to write data row"),                        
+                            Err(_err) => println!("failed to write data row"),                        
                         }
                     },
-                    Err(err) => {
+                    Err(_err) => {
                         println!("failed to save the '{}' image", &image_path);
                     }
                 }
             },
-            Err(err) => {
+            Err(_err) => {
                 println!("failed to capture image");
             }
           }
